@@ -17,7 +17,7 @@ export default function Footer() {
 						<img src="/image/logo.png" alt="Logo" className="scale-130" />
 					</div>
 					<span className="font-medium text-[#C0C4C4]">
-						PKM-PM UCM Kata Kita
+						PKM-PM UGM Kata Kita
 					</span>
 				</div>
 

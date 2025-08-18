@@ -14,7 +14,7 @@ export default function Page() {
 			<h1 className=" py-4 text-center text-2xl font-bold text-[#363A36]">
 				Panduan Instalasi Kata Kita
 			</h1>
-			<div className="container mx-auto flex flex-col items-center space-y-6 px-4">
+			<div className="container mx-auto flex flex-col items-center space-y-6">
 				<StepCard
 					stepNumber="1"
 					title="Unduh file apk Kata Kita"
