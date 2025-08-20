@@ -1,77 +1,108 @@
 'use client'
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { RefreshCw } from "lucide-react";
 
 const ProgressList = () => {
-  // Data JSON seperti di screenshot
-  const [jsonData, setJsonData] = useState({
-    "hasil": [
-      {
-        "kataTarget": "bawang",
-        "hasilPengucapan": "bawang",
-        "benar": true
-      },
-      {
-        "kataTarget": "bawang",
-        "hasilPengucapan": "bawang",
-        "benar": true
-      },
-      {
-        "kataTarget": "apel",
-        "hasilPengucapan": "apel",
-        "benar": true
-      },
-      {
-        "kataTarget": "jeruk",
-        "hasilPengucapan": "jeruk",
-        "benar": true
-      },
-      {
-        "kataTarget": "mangga",
-        "hasilPengucapan": "manga",
-        "benar": false
-      },
-      {
-        "kataTarget": "pisang",
-        "hasilPengucapan": "pisang",
-        "benar": true
-      },
-      {
-        "kataTarget": "tomat",
-        "hasilPengucapan": "tomat",
-        "benar": true
-      },
-      {
-        "kataTarget": "wortel",
-        "hasilPengucapan": "worte",
-        "benar": false
-      },
-      {
-        "kataTarget": "wortel",
-        "hasilPengucapan": "wortel",
-        "benar": true
-      },
-      {
-        "kataTarget": "kubis",
-        "hasilPengucapan": "kubis",
-        "benar": true
-      },
-      {
-        "kataTarget": "bayam",
-        "hasilPengucapan": "bayan",
-        "benar": false
-      },
-      {
-        "kataTarget": "bayam",
-        "hasilPengucapan": "bayam",
-        "benar": true
-    },
-    {
-        "kataTarget": "bayam",
-        "hasilPengucapan": "bayam",
-        "benar": true
+  // State untuk menyimpan data dari PlayFab
+  const [jsonData, setJsonData] = useState({ hasil: [] });
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState('');
+  const [sessionTicket, setSessionTicket] = useState('');
+
+  // PlayFab configuration
+  const PLAYFAB_TITLE_ID = '14E36A';
+  const PLAYFAB_GET_DATA_URL = `https://${PLAYFAB_TITLE_ID}.playfabapi.com/Client/GetUserData`;
+
+  // Ambil session ticket dari localStorage atau state management
+  useEffect(() => {
+    // Asumsi session ticket disimpan di localStorage setelah login
+    const ticket = localStorage.getItem('playfab_session_ticket');
+    if (ticket) {
+      setSessionTicket(ticket);
+      fetchRiwayatData(ticket);
+    } else {
+      setError('Session tidak valid. Silakan login kembali.');
+      setIsLoading(false);
     }
-    ]
-  });
+  }, []);
+
+  // Fungsi untuk mengambil data riwayat dari PlayFab
+  const fetchRiwayatData = async (ticket) => {
+    try {
+      setIsLoading(true);
+      setError('');
+
+      const response = await fetch(PLAYFAB_GET_DATA_URL, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-Authentication': ticket
+        },
+        body: JSON.stringify({
+          Keys: ["RiwayatLatihan"] // Key yang sesuai dengan gambar
+        })
+      });
+
+      const data = await response.json();
+
+      if (data.code === 200) {
+        // Cek apakah data RiwayatLatihan ada
+        if (data.data && data.data.Data && data.data.Data.RiwayatLatihan) {
+          try {
+            // Parse JSON string dari PlayFab
+            const riwayatData = JSON.parse(data.data.Data.RiwayatLatihan.Value);
+            setJsonData(riwayatData);
+          } catch (parseError) {
+            console.error('Error parsing riwayat data:', parseError);
+            setError('Format data tidak valid');
+          }
+        } else {
+          // Jika tidak ada data, set data kosong
+          setJsonData({ hasil: [] });
+        }
+      } else {
+        setError(data.errorMessage || 'Gagal mengambil data riwayat');
+      }
+    } catch (err) {
+      setError('Terjadi kesalahan koneksi. Periksa koneksi internet Anda.');
+      console.error('Fetch riwayat error:', err);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  // Fungsi untuk menyimpan data ke PlayFab
+  const saveRiwayatData = async (newData) => {
+    if (!sessionTicket) {
+      setError('Session tidak valid');
+      return;
+    }
+
+    try {
+      const PLAYFAB_UPDATE_DATA_URL = `https://${PLAYFAB_TITLE_ID}.playfabapi.com/Client/UpdateUserData`;
+      
+      const response = await fetch(PLAYFAB_UPDATE_DATA_URL, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-Authentication': sessionTicket
+        },
+        body: JSON.stringify({
+          Data: {
+            RiwayatLatihan: JSON.stringify(newData)
+          }
+        })
+      });
+
+      const data = await response.json();
+      
+      if (data.code !== 200) {
+        console.error('Error saving data:', data.errorMessage);
+      }
+    } catch (err) {
+      console.error('Save error:', err);
+    }
+  };
 
   // Hitung statistik dari JSON
   const totalWords = jsonData.hasil.length;
@@ -165,8 +196,73 @@ const ProgressList = () => {
     );
   };
 
-  // Fungsi untuk simulasi data baru
-  const addNewResult = (kataTarget, hasilPengucapan) => {
+  // Komponen Loading Skeleton yang realistis
+  const LoadingSkeleton = () => {
+    return (
+      <div className="w-full">
+        {/* Header Skeleton */}
+        <div className="bg-gradient-to-tr from-[#19AC63] to-[#44CC88] text-white px-4 py-3 rounded-t-lg">
+          <div className="flex justify-between items-center">
+            <div className="h-6 bg-white bg-opacity-20 rounded w-40 animate-pulse"></div>
+            <div className="flex items-center space-x-2">
+              <div className="h-8 w-8 bg-white bg-opacity-20 rounded animate-pulse"></div>
+              <div className="h-6 bg-white bg-opacity-20 rounded w-16 animate-pulse"></div>
+            </div>
+          </div>
+        </div>
+
+        {/* Content Skeleton */}
+        <div className="bg-white p-4 rounded-b-lg shadow-lg">
+          <div className="max-h-96 overflow-y-auto">
+            {/* Skeleton untuk 3 progress items */}
+            {[1, 2, 3].map((item) => (
+              <div key={item} className="mb-6 bg-gray-50 rounded-lg p-4">
+                {/* Header skeleton */}
+                <div className="flex justify-between items-center mb-3">
+                  <div className="h-6 bg-gray-300 rounded w-24 animate-pulse"></div>
+                  <div className="flex items-center space-x-3">
+                    <div className="h-5 bg-gray-300 rounded w-16 animate-pulse"></div>
+                    <div className="h-6 bg-gray-300 rounded w-12 animate-pulse"></div>
+                  </div>
+                </div>
+
+                {/* Progress bar skeleton */}
+                <div className="w-full bg-gray-200 rounded-full h-3 mb-3">
+                  <div className="h-3 bg-gray-300 rounded-full w-3/4 animate-pulse"></div>
+                </div>
+
+                {/* Detail attempts skeleton */}
+                <div className="space-y-2">
+                  <div className="h-4 bg-gray-300 rounded w-32 animate-pulse mb-2"></div>
+                  <div className="flex flex-wrap gap-2">
+                    {[1, 2, 3, 4].map((badge) => (
+                      <div key={badge} className="h-6 bg-gray-300 rounded-full w-20 animate-pulse"></div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+
+          {/* Summary Stats skeleton */}
+          <div className="mt-4 p-3 bg-gray-50 rounded-lg">
+            <div className="h-5 bg-gray-300 rounded w-24 animate-pulse mb-2"></div>
+            <div className="grid grid-cols-4 gap-3 text-center">
+              {[1, 2, 3, 4].map((stat) => (
+                <div key={stat}>
+                  <div className="h-6 bg-gray-300 rounded w-8 mx-auto animate-pulse mb-1"></div>
+                  <div className="h-3 bg-gray-300 rounded w-12 mx-auto animate-pulse"></div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  };
+
+  // Fungsi untuk menambahkan hasil baru (untuk testing atau dari komponen lain)
+  const addNewResult = async (kataTarget, hasilPengucapan) => {
     const isCorrect = kataTarget.toLowerCase() === hasilPengucapan.toLowerCase();
     const newResult = {
       kataTarget,
@@ -174,85 +270,48 @@ const ProgressList = () => {
       benar: isCorrect
     };
     
-    setJsonData(prev => ({
-      ...prev,
-      hasil: [...prev.hasil, newResult]
-    }));
+    const newData = {
+      ...jsonData,
+      hasil: [...jsonData.hasil, newResult]
+    };
+    
+    setJsonData(newData);
+    await saveRiwayatData(newData);
   };
 
-
-  // Fungsi untuk load sample data
-  const loadSampleData = () => {
-    setJsonData({
-      "hasil": [
-        {
-        "kataTarget": "bawang",
-        "hasilPengucapan": "bawang",
-        "benar": true
-      },
-      {
-        "kataTarget": "bawang",
-        "hasilPengucapan": "bawang",
-        "benar": true
-      },
-      {
-        "kataTarget": "apel",
-        "hasilPengucapan": "apel",
-        "benar": true
-      },
-      {
-        "kataTarget": "jeruk",
-        "hasilPengucapan": "jeruk",
-        "benar": true
-      },
-      {
-        "kataTarget": "mangga",
-        "hasilPengucapan": "manga",
-        "benar": false
-      },
-      {
-        "kataTarget": "pisang",
-        "hasilPengucapan": "pisang",
-        "benar": true
-      },
-      {
-        "kataTarget": "tomat",
-        "hasilPengucapan": "tomat",
-        "benar": true
-      },
-      {
-        "kataTarget": "wortel",
-        "hasilPengucapan": "worte",
-        "benar": false
-      },
-      {
-        "kataTarget": "wortel",
-        "hasilPengucapan": "wortel",
-        "benar": true
-      },
-      {
-        "kataTarget": "kubis",
-        "hasilPengucapan": "kubis",
-        "benar": true
-      },
-      {
-        "kataTarget": "bayam",
-        "hasilPengucapan": "bayan",
-        "benar": false
-      },
-      {
-        "kataTarget": "bayam",
-        "hasilPengucapan": "bayam",
-        "benar": true
-      },
-      {
-        "kataTarget": "bayam",
-        "hasilPengucapan": "bayam",
-        "benar": true
-      }
-    ]
-    });
+  // Fungsi untuk refresh data
+  const refreshData = () => {
+    if (sessionTicket) {
+      fetchRiwayatData(sessionTicket);
+    }
   };
+
+  // Loading state - menggunakan skeleton yang realistis
+  if (isLoading) {
+    return <LoadingSkeleton />;
+  }
+
+  // Error state
+  if (error && !jsonData.hasil.length) {
+    return (
+      <div className="w-full">
+        <div className="bg-gradient-to-tr from-[#19AC63] to-[#44CC88] text-white px-4 py-3 rounded-t-lg">
+          <h2 className="text-lg font-semibold">Hasil Pengucapan</h2>
+        </div>
+        <div className="bg-white p-4 rounded-b-lg shadow-lg">
+          <div className="text-center text-red-500 py-8">
+            <p className="mb-4">{error}</p>
+            <button
+              onClick={refreshData}
+              className="bg-green-500 text-white px-4 py-2 rounded text-sm hover:bg-green-600 transition-colors"
+            >
+              Coba Lagi
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="w-full">
@@ -260,31 +319,44 @@ const ProgressList = () => {
       <div className="bg-gradient-to-tr from-[#19AC63] to-[#44CC88] text-white px-4 py-3 rounded-t-lg">
         <div className="flex justify-between items-center">
           <h2 className="text-lg font-semibold">Hasil Pengucapan</h2>
-          <div className="text-sm">
-            <span className="bg-white bg-opacity-20 px-2 py-1 rounded text-green-600">
-              {Object.keys(groupedData).length} Kata
-            </span>
+          <div className="flex items-center space-x-2">
+            <button
+              onClick={refreshData}
+              className="bg-white bg-opacity-20 hover:bg-opacity-30 px-2 py-1 rounded text-xs transition-colors"
+              title="Refresh Data"
+            >
+              <RefreshCw className="h-4 w-4 text-green-600" />
+            </button>
+            <div className="text-sm">
+              <span className="bg-white bg-opacity-20 px-2 py-1 rounded text-green-600">
+                {Object.keys(groupedData).length} Kata
+              </span>
+            </div>
           </div>
         </div>
-        <div className="mt-2 text-sm text-green-100">
-          Total Percobaan: {totalWords} | Akurasi: {totalWords > 0 ? Math.round((correctWords/totalWords) * 100) : 0}%
-        </div>
+        {error && (
+          <div className="mt-2 text-xs text-red-200">
+            ⚠️ {error}
+          </div>
+        )}
       </div>
 
       {/* Content */}
       <div className="bg-white p-4 rounded-b-lg shadow-lg">
         {groupedArray.length === 0 ? (
           <div className="text-center text-gray-500 py-8">
-            <p>Belum ada data hasil pengucapan</p>
-            <button
-              onClick={loadSampleData}
-              className="mt-2 bg-green-500 text-white px-4 py-2 rounded text-sm hover:bg-green-600 transition-colors"
-            >
-              Load Sample Data
-            </button>
+            <p className="mb-4">Belum ada data hasil pengucapan</p>
+            <div className="space-x-2">
+              <button
+                onClick={refreshData}
+                className="bg-blue-500 text-white px-4 py-2 rounded text-sm hover:bg-blue-600 transition-colors"
+              >
+                Refresh Data
+              </button>
+            </div>
           </div>
         ) : (
-          <div className="max-h-600 overflow-y-auto">
+          <div className="max-h-96 overflow-y-auto">
             {groupedArray.map((groupedItem, index) => (
               <ProgressItem key={groupedItem.kataTarget} groupedItem={groupedItem} index={index} />
             ))}
@@ -294,7 +366,9 @@ const ProgressList = () => {
         {/* Summary Stats */}
         {groupedArray.length > 0 && (
           <div className="mt-4 p-3 bg-gray-50 rounded-lg">
-            <div className="text-sm font-medium text-gray-700 mb-2">Ringkasan:</div>
+            <div className="flex justify-between items-center mb-2">
+              <div className="text-sm font-medium text-gray-700">Ringkasan:</div>
+            </div>
             <div className="grid grid-cols-4 gap-3 text-center">
               <div>
                 <div className="text-lg font-bold text-blue-600">{Object.keys(groupedData).length}</div>

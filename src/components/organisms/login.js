@@ -53,6 +53,11 @@ export default function LoginForm() {
         const sessionTicket = data.data.SessionTicket;
         const playFabId = data.data.PlayFabId;
         
+        // Simpan session ticket dan PlayFab ID ke localStorage
+        localStorage.setItem('playfab_session_ticket', sessionTicket);
+        localStorage.setItem('playfab_id', playFabId);
+        localStorage.setItem('user_email', email);
+        
         console.log('PlayFab Session Ticket:', sessionTicket);
         console.log('PlayFab ID:', playFabId);
         
