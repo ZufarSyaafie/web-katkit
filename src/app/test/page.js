@@ -14,7 +14,7 @@ export default function Page() {
 			<h1 className=" py-4 text-center text-2xl font-bold text-[#363A36]">
 				Panduan Instalasi Kata Kita
 			</h1>
-			<div className="container mx-auto flex flex-col items-center space-y-6">
+			<div className="container mx-auto flex flex-col items-center space-y-6 px-4">
 				<StepCard
 					stepNumber="1"
 					title="Unduh file apk Kata Kita"
@@ -33,7 +33,7 @@ export default function Page() {
 				/>
 				<StepCard
 					stepNumber="3"
-					title="Signup aplikasi Kata Kita"
+					title="Sign up aplikasi Kata Kita"
 					descriptions={[
 						'Setelah berhasil meng-install, buka aplikasi dan klik play untuk melakukan registrasi dengan email dan password.',
 						'Pastikan mengisi kolom email dan password sebelum klik signup. Kemudian klik signin untuk masuk ke akun.',

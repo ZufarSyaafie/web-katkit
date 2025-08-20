@@ -9,7 +9,7 @@ export default function Page() {
     return (
         <>
             <Navigation />
-            <div className="container flex flex-col space-y-5 max-w-md mx-auto">
+            <div className="container flex flex-col space-y-8 max-w-md mx-auto px-4">
                 <h1 className="mt-4 text-left text-2xl font-bold text-[#363A36]">
                     Halo Zufar 👋
                 </h1>
