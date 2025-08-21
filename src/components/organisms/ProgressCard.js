@@ -16,10 +16,6 @@ const ProgressCard = () => {
   const [error, setError] = useState('');
   const [sessionTicket, setSessionTicket] = useState('');
 
-  // PlayFab configuration
-  const PLAYFAB_BASE_URL = process.env.NEXT_PUBLIC_PLAYFAB_BASE_URL;
-  const PLAYFAB_GET_DATA_URL = `${PLAYFAB_BASE_URL}/GetUserData`;
-
   // Ambil session ticket dan fetch data saat komponen dimount
   useEffect(() => {
     const ticket = localStorage.getItem('playfab_session_ticket');
@@ -40,21 +36,19 @@ const ProgressCard = () => {
     return () => clearTimeout(timer);
   }, [data.accuracy]);
 
-  // Fungsi untuk mengambil data riwayat dari PlayFab
+  // Fungsi untuk mengambil data riwayat menggunakan internal API
   const fetchSpeechData = async (ticket) => {
     try {
       setIsLoading(true);
       setError('');
 
-      const response = await fetch(PLAYFAB_GET_DATA_URL, {
-        method: 'POST',
+      // Call internal API route instead of directly calling PlayFab
+      const response = await fetch('/api/playfab/data?keys=RiwayatLatihan', {
+        method: 'GET',
         headers: {
-          'Content-Type': 'application/json',
-          'X-Authentication': ticket
-        },
-        body: JSON.stringify({
-          Keys: ["RiwayatLatihan"]
-        })
+          'Authorization': `Bearer ${ticket}`,
+          'Content-Type': 'application/json'
+        }
       });
 
       const responseData = await response.json();
@@ -81,7 +75,7 @@ const ProgressCard = () => {
           setIsLoading(false);
         }
       } else {
-        setError(responseData.errorMessage || 'Gagal mengambil data riwayat');
+        setError(responseData.message || 'Gagal mengambil data riwayat');
         setIsLoading(false);
       }
     } catch (err) {
@@ -118,6 +112,9 @@ const ProgressCard = () => {
     }
   };
 
+  // ... rest of the component remains the same
+  // (getGradientColors, getCircleColor, LoadingSkeleton functions and JSX)
+
   // Tentukan warna berdasarkan akurasi
   const getGradientColors = () => {
     if (data.accuracy >= 80) {
@@ -139,36 +136,24 @@ const ProgressCard = () => {
     }
   };
 
-  // Komponen Loading Skeleton yang realistis
+  // Loading Skeleton
   const LoadingSkeleton = () => {
     return (
       <div className="max-w-md mx-auto bg-gradient-to-tr from-[#19AC63] to-[#44CC88] rounded-2xl p-6 text-white shadow-xl">
         <div className="flex justify-between items-start">
-          {/* Content kiri skeleton */}
           <div className="flex-1 pr-4">
-            {/* Title skeleton */}
             <div className="h-7 bg-white bg-opacity-30 rounded-md mb-3 animate-pulse w-48"></div>
-            
-            {/* Description skeleton - 3 baris */}
             <div className="space-y-2 mb-4">
               <div className="h-4 bg-white bg-opacity-20 rounded w-full animate-pulse"></div>
               <div className="h-4 bg-white bg-opacity-20 rounded w-5/6 animate-pulse"></div>
               <div className="h-4 bg-white bg-opacity-20 rounded w-4/5 animate-pulse"></div>
             </div>
-            
-            {/* Stats skeleton */}
             <div className="h-3 bg-white bg-opacity-20 rounded w-32 animate-pulse"></div>
           </div>
-
-          {/* Progress Circle skeleton */}
           <div className="relative w-29 h-29">
-            {/* Background circle skeleton */}
             <div className="w-full h-full rounded-full border-4 border-white border-opacity-20 animate-pulse">
-              {/* Inner circle untuk simulasi progress */}
               <div className="absolute inset-2 rounded-full bg-white bg-opacity-10 animate-pulse"></div>
             </div>
-            
-            {/* Percentage text skeleton */}
             <div className="absolute inset-0 flex items-center justify-center">
               <div className="h-8 bg-white bg-opacity-30 rounded w-12 animate-pulse"></div>
             </div>
@@ -178,7 +163,7 @@ const ProgressCard = () => {
     );
   };
 
-  // Loading state - menggunakan skeleton yang realistis
+  // Loading state
   if (isLoading) {
     return <LoadingSkeleton />;
   }
@@ -204,7 +189,6 @@ const ProgressCard = () => {
   return (
     <div className={`max-w-md mx-auto bg-gradient-to-tr ${getGradientColors()} rounded-2xl p-6 text-white shadow-xl`}>
       <div className="flex justify-between items-start">
-        {/* Content kiri */}
         <div className="flex-1 pr-4">
           <h2 className="text-xl font-bold mb-3">{data.title}</h2>
           <p className="text-white text-sm leading-relaxed opacity-100">
@@ -214,11 +198,8 @@ const ProgressCard = () => {
             Benar: {data.current} / {data.total} percobaan
           </div>
         </div>
-
-        {/* Progress Circle */}
         <div className="relative w-29 h-29">
           <svg className="w-full h-full transform -rotate-90" viewBox="0 0 36 36">
-            {/* Background circle */}
             <path
               className={getCircleColor()}
               stroke="currentColor"
@@ -227,7 +208,6 @@ const ProgressCard = () => {
               d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
               strokeOpacity="0.3"
             />
-            {/* Progress circle */}
             <path
               className="text-white"
               stroke="currentColor"

@@ -1,7 +1,6 @@
 'use client'
 import React, { useState, useEffect } from 'react';
 import { Brain, TrendingUp, RefreshCw, Copy, AlertCircle } from "lucide-react";
-import { GoogleGenerativeAI } from "@google/generative-ai";
 
 // Komponen untuk merender markdown dengan style yang konsisten
 const MarkdownRenderer = ({ content }) => {
@@ -68,11 +67,6 @@ const SummaryCard = () => {
   const [dataInfo, setDataInfo] = useState(null);
   const [isExpanded, setIsExpanded] = useState(false);
 
-  // Hardcode API key Gemini di sini
-  const GEMINI_API_KEY = process.env.NEXT_PUBLIC_GEMINI_API;
-  const PLAYFAB_BASE_URL = process.env.NEXT_PUBLIC_PLAYFAB_BASE_URL;
-  const PLAYFAB_GET_DATA_URL = `${PLAYFAB_BASE_URL}/GetUserData`;
-
   // Ambil session ticket saat komponen dimount
   useEffect(() => {
     const ticket = localStorage.getItem('playfab_session_ticket');
@@ -82,21 +76,19 @@ const SummaryCard = () => {
   }, []);
 
   const fetchPlayFabData = async (ticket) => {
-    const response = await fetch(PLAYFAB_GET_DATA_URL, {
-      method: 'POST',
+    // Use internal API route instead of direct PlayFab call
+    const response = await fetch('/api/playfab/data?keys=RiwayatLatihan', {
+      method: 'GET',
       headers: {
-        'Content-Type': 'application/json',
-        'X-Authentication': ticket
-      },
-      body: JSON.stringify({
-        Keys: ["RiwayatLatihan"]
-      })
+        'Authorization': `Bearer ${ticket}`,
+        'Content-Type': 'application/json'
+      }
     });
 
     const playfabData = await response.json();
 
     if (playfabData.code !== 200) {
-      throw new Error(playfabData.errorMessage || 'Gagal mengambil data dari PlayFab');
+      throw new Error(playfabData.message || 'Gagal mengambil data dari PlayFab');
     }
 
     if (playfabData.data && playfabData.data.Data && playfabData.data.Data.RiwayatLatihan) {
@@ -111,28 +103,22 @@ const SummaryCard = () => {
   };
 
   const analyzeWithGemini = async (jsonData) => {
-    const genAI = new GoogleGenerativeAI(GEMINI_API_KEY);
-    const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+    // Use internal API route instead of direct Gemini call
+    const response = await fetch('/api/gemini/analyze', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({ data: jsonData })
+    });
 
-    const prompt = `
-      Analisis dan buatkan ringkasan dari data riwayat latihan pengucapan berikut ini:
-      
-      ${JSON.stringify(jsonData, null, 2)}
-      
-      Berikan ringkasan yang mencakup:
-      1. **Gambaran Umum Performa**: Total percobaan, tingkat akurasi, dan tren pembelajaran
-      2. **Analisis Kata-kata**: Kata mana yang paling sering dipraktikkan dan tingkat kesulitannya
-      3. **Pola Pembelajaran**: Konsistensi dan area yang perlu diperbaiki
-      4. **Insight dan Rekomendasi**: Saran konkret untuk meningkatkan kemampuan pengucapan
-      5. **Pencapaian**: Highlight prestasi yang telah dicapai
-      
-      Format response dalam bahasa Indonesia yang mudah dipahami dengan struktur yang rapi.
-      Fokus pada memberikan feedback yang konstruktif dan motivasi. Maksimal 500 kata.
-    `;
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(errorData.message || 'Gagal menganalisis dengan AI');
+    }
 
-    const result = await model.generateContent(prompt);
-    const response = await result.response;
-    return response.text();
+    const result = await response.json();
+    return result.analysis;
   };
 
   const handleAnalyze = async () => {
@@ -163,7 +149,7 @@ const SummaryCard = () => {
         accuracy
       });
 
-      // Analisis dengan Gemini
+      // Analisis dengan Gemini melalui API route
       const aiSummary = await analyzeWithGemini(jsonData);
       setSummary(aiSummary);
       setIsExpanded(true);
@@ -214,7 +200,6 @@ const SummaryCard = () => {
             <div className="h-6 bg-white bg-opacity-20 rounded w-40 animate-pulse"></div>
             <div className="flex items-center space-x-2">
               <div className="h-8 w-8 bg-white bg-opacity-20 rounded animate-pulse"></div>
-              <div className="h-6 bg-white bg-opacity-20 rounded w-16 animate-pulse"></div>
             </div>
           </div>
         </div>
@@ -266,28 +251,12 @@ const SummaryCard = () => {
             {summary && (
               <button
                 onClick={resetAnalysis}
-                className="bg-white bg-opacity-20 hover:bg-opacity-30 px-2 py-1 rounded text-xs transition-colors"
+                className="px-2 py-1 rounded text-xs transition-colors"
                 title="Reset Analisis"
               >
-                <RefreshCw className="h-4 w-4 text-green-600" />
+                <RefreshCw className="h-4 w-4 text-white" />
               </button>
             )}
-            <div className="text-sm">
-              <span
-                className={`flex items-center gap-2 px-2 py-1 rounded text-xs font-medium ${
-                  sessionTicket 
-                    ? 'bg-white bg-opacity-20 text-green-600' 
-                    : 'bg-red-500 bg-opacity-80 text-white'
-                }`}
-              >
-                <span
-                  className={`w-2 h-2 rounded-full ${
-                    sessionTicket ? 'bg-green-600' : 'bg-red-500'
-                  }`}
-                ></span>
-                {sessionTicket ? 'Terhubung' : 'Tidak terhubung'}
-              </span>
-            </div>
           </div>
         </div>
         {error && (

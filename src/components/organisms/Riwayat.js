@@ -8,15 +8,9 @@ const ProgressList = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState('');
   const [sessionTicket, setSessionTicket] = useState('');
-  
-  // PlayFab configuration
-  const PLAYFAB_BASE_URL = process.env.NEXT_PUBLIC_PLAYFAB_BASE_URL;
-  const PLAYFAB_GET_DATA_URL = `${PLAYFAB_BASE_URL}/GetUserData`;
-  const PLAYFAB_UPDATE_DATA_URL = `${PLAYFAB_BASE_URL}/UpdateUserData`;
 
-  // Ambil session ticket dari localStorage atau state management
+  // Ambil session ticket dari localStorage
   useEffect(() => {
-    // Asumsi session ticket disimpan di localStorage setelah login
     const ticket = localStorage.getItem('playfab_session_ticket');
     if (ticket) {
       setSessionTicket(ticket);
@@ -27,21 +21,19 @@ const ProgressList = () => {
     }
   }, []);
 
-  // Fungsi untuk mengambil data riwayat dari PlayFab
+  // Fungsi untuk mengambil data riwayat menggunakan internal API
   const fetchRiwayatData = async (ticket) => {
     try {
       setIsLoading(true);
       setError('');
 
-      const response = await fetch(PLAYFAB_GET_DATA_URL, {
-        method: 'POST',
+      // Call internal API route instead of directly calling PlayFab
+      const response = await fetch('/api/playfab/data?keys=RiwayatLatihan', {
+        method: 'GET',
         headers: {
-          'Content-Type': 'application/json',
-          'X-Authentication': ticket
-        },
-        body: JSON.stringify({
-          Keys: ["RiwayatLatihan"] // Key yang sesuai dengan gambar
-        })
+          'Authorization': `Bearer ${ticket}`,
+          'Content-Type': 'application/json'
+        }
       });
 
       const data = await response.json();
@@ -62,7 +54,7 @@ const ProgressList = () => {
           setJsonData({ hasil: [] });
         }
       } else {
-        setError(data.errorMessage || 'Gagal mengambil data riwayat');
+        setError(data.message || 'Gagal mengambil data riwayat');
       }
     } catch (err) {
       setError('Terjadi kesalahan koneksi. Periksa koneksi internet Anda.');
@@ -72,7 +64,7 @@ const ProgressList = () => {
     }
   };
 
-  // Fungsi untuk menyimpan data ke PlayFab
+  // Fungsi untuk menyimpan data menggunakan internal API
   const saveRiwayatData = async (newData) => {
     if (!sessionTicket) {
       setError('Session tidak valid');
@@ -80,12 +72,11 @@ const ProgressList = () => {
     }
 
     try {
-      
-      const response = await fetch(PLAYFAB_UPDATE_DATA_URL, {
+      const response = await fetch('/api/playfab/data', {
         method: 'POST',
         headers: {
-          'Content-Type': 'application/json',
-          'X-Authentication': sessionTicket
+          'Authorization': `Bearer ${sessionTicket}`,
+          'Content-Type': 'application/json'
         },
         body: JSON.stringify({
           Data: {
@@ -97,7 +88,7 @@ const ProgressList = () => {
       const data = await response.json();
       
       if (data.code !== 200) {
-        console.error('Error saving data:', data.errorMessage);
+        console.error('Error saving data:', data.message);
       }
     } catch (err) {
       console.error('Save error:', err);
