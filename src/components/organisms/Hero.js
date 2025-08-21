@@ -5,9 +5,17 @@ import { ArrowRightCircle } from 'lucide-react';
 
 export default function Hero() {
   const handleDownload = () => {
+    // cek apakah user pakai Android
+    const isAndroid = /Android/i.test(navigator.userAgent);
+
+    if (!isAndroid) {
+      alert("Download hanya bisa dilakukan lewat perangkat Android.");
+      return;
+    }
+
     const link = document.createElement("a");
-    link.href = "/file/Kata Kita.apk";   // lokasi file di folder public/file
-    link.download = "Kata Kita.apk";     // nama file hasil download
+    link.href = "https://drive.google.com/uc?export=download&id=199Fned1H6ZS82nk2Uq2VbcE1wk7gigar";
+    link.download = "fileku.pdf"; // opsional
     link.click();
   };
 
