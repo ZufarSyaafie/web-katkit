@@ -17,8 +17,8 @@ const ProgressCard = () => {
   const [sessionTicket, setSessionTicket] = useState('');
 
   // PlayFab configuration
-  const PLAYFAB_TITLE_ID = '14E36A';
-  const PLAYFAB_GET_DATA_URL = `https://${PLAYFAB_TITLE_ID}.playfabapi.com/Client/GetUserData`;
+  const PLAYFAB_BASE_URL = process.env.NEXT_PUBLIC_PLAYFAB_BASE_URL;
+  const PLAYFAB_GET_DATA_URL = `${PLAYFAB_BASE_URL}/GetUserData`;
 
   // Ambil session ticket dan fetch data saat komponen dimount
   useEffect(() => {
@@ -186,13 +186,13 @@ const ProgressCard = () => {
   // Error state
   if (error) {
     return (
-      <div className="max-w-md mx-auto bg-gradient-to-tr from-red-500 to-red-600 rounded-2xl p-6 text-white shadow-xl">
+      <div className="max-w-md mx-auto bg-gradient-to-r from-[#DD2626] to-[#FF4A4A] rounded-2xl p-6 text-white shadow-xl">
         <div className="text-center">
           <h2 className="text-xl font-bold mb-3">Error</h2>
           <p className="text-sm mb-4">{error}</p>
           <button
             onClick={refreshData}
-            className="bg-white bg-opacity-20 hover:bg-opacity-30 px-4 py-2 rounded text-sm transition-colors"
+            className="bg-white bg-opacity-20 hover:bg-opacity-30 px-4 py-2 rounded text-sm transition-colors text-red-500 font-semibold"
           >
             Coba Lagi
           </button>
@@ -207,7 +207,7 @@ const ProgressCard = () => {
         {/* Content kiri */}
         <div className="flex-1 pr-4">
           <h2 className="text-xl font-bold mb-3">{data.title}</h2>
-          <p className="text-white text-sm leading-relaxed opacity-90">
+          <p className="text-white text-sm leading-relaxed opacity-100">
             {data.description}
           </p>
           <div className="mt-4 text-xs text-white opacity-80">

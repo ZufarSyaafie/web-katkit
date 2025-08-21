@@ -48,7 +48,7 @@ export default function Navigation() {
 		setIsMenuOpen(false);
 		
 		// Redirect to home page
-		window.location.href = '/test';
+		window.location.href = '/';
 	};
 
 	const toggleMenu = () => {
@@ -65,7 +65,7 @@ export default function Navigation() {
 				<div className="flex max-w-full items-center justify-between">
 					{/* Logo */}
 					<div className="flex flex-shrink-0 items-center">
-						<a href="/test">
+						<a href="/">
 							<Image src="/image/logo.png" alt="Logo" width={50} height={50} />
 						</a>
 					</div>

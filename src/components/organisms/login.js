@@ -11,8 +11,9 @@ export default function LoginForm() {
   const [success, setSuccess] = useState('');
 
   // PlayFab configuration - Ganti dengan Title ID PlayFab Anda
-  const PLAYFAB_TITLE_ID = '14E36A';
-  const PLAYFAB_URL = `https://${PLAYFAB_TITLE_ID}.playfabapi.com/Client/LoginWithEmailAddress`;
+  const PLAYFAB_TITLE_ID = process.env.NEXT_PUBLIC_PLAYFAB_TITLE_ID;
+  const PLAYFAB_BASE_URL = process.env.NEXT_PUBLIC_PLAYFAB_BASE_URL;
+  const PLAYFAB_URL = `${PLAYFAB_BASE_URL}/LoginWithEmailAddress`;
 
   const handleLogin = async (e) => {
     e.preventDefault();

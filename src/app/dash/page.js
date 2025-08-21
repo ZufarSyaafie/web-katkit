@@ -5,6 +5,7 @@ import Navigation from '@/components/organisms/Navigation';
 import Footer from '@/components/organisms/Footer';
 import ProgressCard from '@/components/organisms/ProgressCard';
 import Riwayat from '@/components/organisms/Riwayat';
+import SummaryCard from '@/components/organisms/Summary';
 
 export default function Page() {
   const [userName, setUserName] = useState('');
@@ -58,6 +59,7 @@ export default function Page() {
         </h1>
         <ProgressCard />
         <Riwayat />
+        <SummaryCard />
       </div>
       <Footer />
     </>

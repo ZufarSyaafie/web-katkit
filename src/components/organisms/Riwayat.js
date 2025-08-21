@@ -8,10 +8,11 @@ const ProgressList = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState('');
   const [sessionTicket, setSessionTicket] = useState('');
-
+  
   // PlayFab configuration
-  const PLAYFAB_TITLE_ID = '14E36A';
-  const PLAYFAB_GET_DATA_URL = `https://${PLAYFAB_TITLE_ID}.playfabapi.com/Client/GetUserData`;
+  const PLAYFAB_BASE_URL = process.env.NEXT_PUBLIC_PLAYFAB_BASE_URL;
+  const PLAYFAB_GET_DATA_URL = `${PLAYFAB_BASE_URL}/GetUserData`;
+  const PLAYFAB_UPDATE_DATA_URL = `${PLAYFAB_BASE_URL}/UpdateUserData`;
 
   // Ambil session ticket dari localStorage atau state management
   useEffect(() => {
@@ -79,7 +80,6 @@ const ProgressList = () => {
     }
 
     try {
-      const PLAYFAB_UPDATE_DATA_URL = `https://${PLAYFAB_TITLE_ID}.playfabapi.com/Client/UpdateUserData`;
       
       const response = await fetch(PLAYFAB_UPDATE_DATA_URL, {
         method: 'POST',
@@ -303,7 +303,7 @@ const ProgressList = () => {
             <p className="mb-4">{error}</p>
             <button
               onClick={refreshData}
-              className="bg-green-500 text-white px-4 py-2 rounded text-sm hover:bg-green-600 transition-colors"
+              className="bg-gradient-to-tr from-[#19AC63] to-[#44CC88] text-white px-4 py-2 rounded text-sm hover:bg-green-800 transition-colors font-semibold"
             >
               Coba Lagi
             </button>
@@ -322,16 +322,11 @@ const ProgressList = () => {
           <div className="flex items-center space-x-2">
             <button
               onClick={refreshData}
-              className="bg-white bg-opacity-20 hover:bg-opacity-30 px-2 py-1 rounded text-xs transition-colors"
+              className="px-2 py-1 rounded text-xs transition-colors"
               title="Refresh Data"
             >
-              <RefreshCw className="h-4 w-4 text-green-600" />
+              <RefreshCw className="h-4 w-4 text-white" />
             </button>
-            <div className="text-sm">
-              <span className="bg-white bg-opacity-20 px-2 py-1 rounded text-green-600">
-                {Object.keys(groupedData).length} Kata
-              </span>
-            </div>
           </div>
         </div>
         {error && (
@@ -360,33 +355,6 @@ const ProgressList = () => {
             {groupedArray.map((groupedItem, index) => (
               <ProgressItem key={groupedItem.kataTarget} groupedItem={groupedItem} index={index} />
             ))}
-          </div>
-        )}
-
-        {/* Summary Stats */}
-        {groupedArray.length > 0 && (
-          <div className="mt-4 p-3 bg-gray-50 rounded-lg">
-            <div className="flex justify-between items-center mb-2">
-              <div className="text-sm font-medium text-gray-700">Ringkasan:</div>
-            </div>
-            <div className="grid grid-cols-4 gap-3 text-center">
-              <div>
-                <div className="text-lg font-bold text-blue-600">{Object.keys(groupedData).length}</div>
-                <div className="text-xs text-gray-500">Kata</div>
-              </div>
-              <div>
-                <div className="text-lg font-bold text-gray-700">{totalWords}</div>
-                <div className="text-xs text-gray-500">Total</div>
-              </div>
-              <div>
-                <div className="text-lg font-bold text-green-600">{correctWords}</div>
-                <div className="text-xs text-gray-500">Benar</div>
-              </div>
-              <div>
-                <div className="text-lg font-bold text-red-600">{incorrectWords}</div>
-                <div className="text-xs text-gray-500">Salah</div>
-              </div>
-            </div>
           </div>
         )}
       </div>
