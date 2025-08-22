@@ -16,7 +16,7 @@ export const metadata = {
   title: "Kata Kita",
   description: "Dibuat oleh Tim PKM-PM UGM Kata Kita",
   icons: {
-    icon: '/favicon.ico',  // ganti path ke file favicon-mu
+    icon: '/logo.ico',  // ganti path ke file favicon-mu
   },
 };
 
