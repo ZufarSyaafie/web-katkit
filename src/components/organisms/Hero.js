@@ -14,7 +14,7 @@ export default function Hero() {
     }
 
     const link = document.createElement("a");
-    link.href = "https://drive.google.com/uc?export=download&id=1-6HHnfE9Vf2-r3s7anIw-ma5nQh2Iz_0";
+    link.href = "https://drive.google.com/uc?export=download&id=13asQHOdisLNVnjoi7xynNEatRt3EoEIs";
     link.download = ""; // opsional
     link.click();
   };
